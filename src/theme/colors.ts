@@ -13,7 +13,3 @@ export const blackAlpha = values.blackAlpha;
 
 /** Translucent fills on dark green. */
 export const whiteAlpha = values.whiteAlpha;
-
-/** Pixel-art palette for the Home growth avatar (react-native-svg fills). */
-export const pixel = values.pixel;
-export type PixelColor = keyof typeof pixel;

@@ -182,3 +182,4 @@ Deviations and findings:
 - Negative amounts use Intl's hyphen ("-₱8,000.00"), not "−".
 - Not verified: Home on iOS/Android (the simulator wasn't onboarded and can't be driven with a press-and-hold), including the iOS automatic-content-inset risk.
 - Web tab bar spans the full width at ≥768; the tabs aren't capped to 720.
+- Follow-up: the sprite was redrawn to match the mockup's monochrome LCD look (Casio pocket game). The plan's brown and green palette and 32 × 20 grid are gone. It's now 14 × 10 chunky pixels at 7pt (98 × 70), lit `whiteAlpha.a60` plus dim `whiteAlpha.a30`, with the mockup's mound as the base. Trunks use the dim tone so wood reads apart from leaves and soil. The `pixel` palette tokens were removed.
