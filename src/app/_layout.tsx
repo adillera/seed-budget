@@ -56,10 +56,10 @@ export default function RootLayout() {
             headerTitleStyle: { fontFamily: fonts.sans.semibold, color: colors.textBlack },
           }}>
           {/* First launch only. Gated with explicit redirects, not Stack.Protected: in SDK 58 a
-              guard flip doesn't move off a nested onboarding screen (plan 04). index redirects
-              to /onboarding until onboarded; onboarding/_layout redirects to / once it is. */}
+              guard flip doesn't move off a nested onboarding screen (plan 04). (tabs)/_layout
+              redirects to /onboarding until onboarded; onboarding/_layout redirects to / once it is. */}
           <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-          <Stack.Screen name="index" options={{ animation: 'fade' }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: 'fade' }} />
         </Stack>
       </SQLiteProvider>
     </ThemeProvider>

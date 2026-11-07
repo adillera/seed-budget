@@ -53,6 +53,21 @@ const colors = {
   focusRing: '#00754a',
 };
 
+/**
+ * Pixel-art palette for the Home growth avatar (src/features/home/growth-avatar.tsx).
+ * JS only (react-native-svg fills), not Tailwind classes. Tuned to sit on the photo scrim.
+ */
+const pixel = {
+  soilDark: '#3b2a1e',
+  soil: '#5a4030',
+  soilLight: '#7a5a42',
+  stem: '#7fbf5a',
+  trunk: '#6b4a2f',
+  leafDark: '#2f6b3a',
+  leaf: '#4f9a4a',
+  leafLight: '#8fd06a',
+};
+
 /** Dark overlays and scrims on light surfaces. Tailwind: `bg-black-alpha-50`. */
 const blackAlpha = {
   a06: 'rgba(0, 0, 0, 0.06)',
@@ -146,6 +161,11 @@ const size = {
   fieldList: 176,
   /** ScrollHint chip height. */
   scrollHint: 36,
+  /** Home category breakdown bar height. */
+  progressBar: 6,
+  /** Home pixel plant (32 × 20 sprite grid at 3 per pixel). */
+  growthAvatarWidth: 96,
+  growthAvatarHeight: 60,
 };
 
 /** Milliseconds. */
@@ -225,6 +245,7 @@ const typeScale = {
 
 module.exports = {
   colors,
+  pixel,
   blackAlpha,
   whiteAlpha,
   space,

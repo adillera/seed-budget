@@ -30,3 +30,17 @@ const shortDate = new Intl.DateTimeFormat(CURRENCY.locale, {
 export function formatShortDate(date: Date | string) {
   return shortDate.format(typeof date === 'string' ? fromLocalISODate(date) : date);
 }
+
+/** First and last local day of the month containing `date`, as YYYY-MM-DD. */
+export function monthBounds(date: Date) {
+  const start = new Date(date.getFullYear(), date.getMonth(), 1);
+  const end = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  return { start: toLocalISODate(start), end: toLocalISODate(end) };
+}
+
+const monthYear = new Intl.DateTimeFormat(CURRENCY.locale, { month: 'long', year: 'numeric' });
+
+/** "November 2026" */
+export function formatMonthYear(date: Date) {
+  return monthYear.format(date);
+}

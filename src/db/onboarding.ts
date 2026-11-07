@@ -9,12 +9,21 @@ export const STARTING_BUDGET_NOTE = 'Starting budget';
 /**
  * Writes the onboarding draft in one transaction: categories (in list order), the starting
  * budget as an income transaction (skipped when 0) and the bills. Parameterized queries only.
+ *
+ * Onboarding defines the starting state, so it first clears rows left by an earlier run (the
+ * flag was reset but seed.db kept). Without that, re-inserting the default category names hits
+ * their UNIQUE constraint and the save fails.
  */
 export async function saveOnboarding(db: SQLiteDatabase, draft: OnboardingDraft) {
   const startingCents = parseMoney(draft.startingAmountText) ?? 0;
   const incomeCategory = startingBudgetCategory(draft);
 
   await db.withTransactionAsync(async () => {
+    // Children first: bills and transactions reference categories.
+    await db.runAsync('DELETE FROM bills');
+    await db.runAsync('DELETE FROM transactions');
+    await db.runAsync('DELETE FROM categories');
+
     const ids = new Map<string, number>();
     for (const [i, c] of draft.categories.entries()) {
       const result = await db.runAsync(
