@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 290 240" role="img" aria-label="Seed: Budget">
+  <g transform="translate(-200 -290)">
+    <!-- Ground: green-house -->
+    <path d="M216 514 Q345 496 472 514" fill="none" stroke="#1e3932" stroke-width="14" stroke-linecap="round"/>
+    <!-- Seed: green-house -->
+    <path d="M268 489 L437 489 C445 470 446 440 430 425 C418 410 385 408 362 430 C340 415 300 412 283 430 C266 448 263 470 268 489 Z" fill="#1e3932"/>
+    <!-- Highlight -->
+    <path d="M296 462 C298 448 308 438 325 436" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="8" stroke-linecap="round"/>
+    <!-- Sprout: green-accent -->
+    <path d="M362 428 C360 400 348 380 350 345" fill="none" stroke="#00754a" stroke-width="18" stroke-linecap="round"/>
+    <path d="M350 360 C340 340 300 333 279 347 C298 368 330 372 350 360 Z" fill="#00754a"/>
+    <path d="M352 352 C362 318 395 302 432 304 C422 335 390 356 352 352 Z" fill="#00754a"/>
+  </g>
+</svg>
