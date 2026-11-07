@@ -2,7 +2,24 @@
 
 export type CategoryKind = 'income' | 'expense';
 
-export type BillFrequency = 'weekly' | 'biweekly' | 'monthly' | 'yearly';
+/**
+ * Stored values for bills.frequency, in picker order. The CHECK constraint in migrate.ts is built
+ * from this list; adding a value needs a new migration step (SQLite can't alter a CHECK).
+ */
+export const BILL_FREQUENCIES = [
+  'once',
+  'daily',
+  'weekly',
+  'biweekly',
+  'semimonthly',
+  'monthly',
+  'bimonthly',
+  'quarterly',
+  'semiannually',
+  'yearly',
+] as const;
+
+export type BillFrequency = (typeof BILL_FREQUENCIES)[number];
 
 export type CategoryRow = {
   id: number;

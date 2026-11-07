@@ -26,13 +26,18 @@ export default function Plough() {
   const { draft, dispatch } = useOnboardingDraft();
 
   const income = startingBudgetCategory(draft);
-  const expenseOptions = draft.categories
-    .filter((c) => c.kind === 'expense')
-    .map((c) => ({ label: c.name, value: c.key }));
+  // Every category from the Fields step, with its type, so a recurring entry can go anywhere.
+  const categoryOptions = draft.categories.map((c) => ({
+    label: `${c.name} · ${c.kind === 'income' ? 'Income' : 'Expense'}`,
+    value: c.key,
+  }));
+  // Most bills are expenses: default to the first expense category.
+  const defaultCategory =
+    draft.categories.find((c) => c.kind === 'expense')?.key ?? draft.categories[0]?.key;
   const categoryName = (key: string) => draft.categories.find((c) => c.key === key)?.name ?? '';
 
   // Bill form. Category and frequency stay between bills; the rest resets after each add.
-  const [chosenCategory, setChosenCategory] = useState(expenseOptions[0]?.value);
+  const [chosenCategory, setChosenCategory] = useState(defaultCategory);
   const [billName, setBillName] = useState('');
   const [amountText, setAmountText] = useState('');
   const [frequency, setFrequency] = useState<BillFrequency>('monthly');
@@ -41,10 +46,10 @@ export default function Plough() {
   const [saving, setSaving] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
 
-  // The chosen category may have been removed on the Fields step: fall back to the first one.
-  const categoryKey = expenseOptions.some((o) => o.value === chosenCategory)
+  // The chosen category may have been removed on the Fields step: fall back to the default.
+  const categoryKey = categoryOptions.some((o) => o.value === chosenCategory)
     ? chosenCategory
-    : expenseOptions[0]?.value;
+    : defaultCategory;
 
   const startingInvalid =
     draft.startingAmountText.trim() !== '' && parseMoney(draft.startingAmountText) === null;
@@ -156,7 +161,7 @@ export default function Plough() {
                 <ItemRow
                   key={b.key}
                   title={title}
-                  detail={`${formatMoney(b.amountCents)} · ${frequencyLabel(b.frequency)} · Next ${formatShortDate(b.nextDueDate)}`}
+                  detail={`${formatMoney(b.amountCents)} · ${frequencyLabel(b.frequency)} · ${b.frequency === 'once' ? 'Due' : 'Next'} ${formatShortDate(b.nextDueDate)}`}
                   onRemove={() => dispatch({ type: 'removeBill', key: b.key })}
                   removeLabel={`Remove ${title}`}
                 />
@@ -169,7 +174,7 @@ export default function Plough() {
           <SelectField
             labelPosition="above"
             label="Category"
-            options={expenseOptions}
+            options={categoryOptions}
             value={categoryKey}
             onChange={setChosenCategory}
           />
