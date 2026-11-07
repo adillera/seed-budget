@@ -5,6 +5,7 @@ import { DefaultTheme, Stack, ThemeProvider, type Theme } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { SQLiteProvider } from 'expo-sqlite';
 import { useEffect } from 'react';
+import { Platform } from 'react-native';
 
 import { DATABASE_NAME, migrate } from '@/db/migrate';
 import { useOnboarded } from '@/lib/onboarding';
@@ -12,6 +13,9 @@ import { colors, fonts } from '@/theme';
 import { useAppFonts } from '@/theme/fonts';
 
 SplashScreen.preventAutoHideAsync();
+
+// Sheets (add-entry) open over the tabs, even after a deep link or a web reload.
+export const unstable_settings = { anchor: '(tabs)' };
 
 const navigationTheme: Theme = {
   ...DefaultTheme,
@@ -60,6 +64,27 @@ export default function RootLayout() {
               redirects to /onboarding until onboarded; onboarding/_layout redirects to / once it is. */}
           <Stack.Screen name="onboarding" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: 'fade' }} />
+          {/* Native: a system form sheet sized to its content. Web: Expo Router renders form
+              sheets as plain routes, so it's a transparent modal and SheetFrame's web twin
+              draws the scrim and panel over the tabs. */}
+          <Stack.Screen
+            name="add-entry"
+            options={Platform.select({
+              web: {
+                presentation: 'transparentModal',
+                animation: 'none',
+                headerShown: false,
+                contentStyle: { backgroundColor: 'transparent' },
+              },
+              default: {
+                presentation: 'formSheet',
+                sheetGrabberVisible: true,
+                sheetAllowedDetents: 'fitToContents',
+                headerShown: false,
+                contentStyle: { backgroundColor: colors.white },
+              },
+            })}
+          />
         </Stack>
       </SQLiteProvider>
     </ThemeProvider>

@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+import { router } from 'expo-router';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -52,8 +53,7 @@ export function Hero({ month, summary }: HeroProps) {
           </View>
         </View>
 
-        {/* No action yet (plan 05): the entry form is a later feature. */}
-        <Button variant="inverse" fullWidth icon={icons.plus}>
+        <Button variant="inverse" fullWidth icon={icons.plus} onPress={() => router.push('/add-entry')}>
           Add an entry
         </Button>
       </View>

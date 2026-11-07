@@ -80,14 +80,17 @@ function OptionsSelect({
         {labelPosition === 'above' ? (
           <View className="gap-1">
             <FieldLabel label={label} />
-            <View className="min-h-field rounded-field border border-input-border bg-white flex-row items-center gap-2 px-3">
-              <Text
-                className="flex-1"
-                color={selected ? 'textBlack' : 'textBlackSoft'}
-                numberOfLines={1}>
-                {selected?.label ?? placeholder ?? ''}
-              </Text>
-              <Icon name={icons.chevronDown} size={18} />
+            {/* Same box geometry as TextField `above` (border, p-px, a py-3 row) so they line up side by side. */}
+            <View className="min-h-field rounded-field border border-input-border p-px bg-white justify-center">
+              <View className="flex-row items-center gap-2 px-3 py-3">
+                <Text
+                  className="flex-1"
+                  color={selected ? 'textBlack' : 'textBlackSoft'}
+                  numberOfLines={1}>
+                  {selected?.label ?? placeholder ?? ''}
+                </Text>
+                <Icon name={icons.chevronDown} size={18} />
+              </View>
             </View>
           </View>
         ) : (

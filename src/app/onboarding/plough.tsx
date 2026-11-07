@@ -5,16 +5,11 @@ import { View } from 'react-native';
 import { Badge, Button, Card, DateField, SelectField, Text, TextField } from '@/components/ui';
 import { saveOnboarding } from '@/db/onboarding';
 import type { BillFrequency } from '@/db/schema';
-import {
-  BILL_NAME_MAX,
-  FREQUENCY_OPTIONS,
-  frequencyLabel,
-  startingBudgetCategory,
-  useOnboardingDraft,
-} from '@/features/onboarding/draft';
+import { BILL_NAME_MAX, startingBudgetCategory, useOnboardingDraft } from '@/features/onboarding/draft';
 import { ItemRow } from '@/features/onboarding/item-row';
 import { SetupScreen } from '@/features/onboarding/setup-screen';
 import { formatShortDate, toLocalISODate, today } from '@/lib/dates';
+import { FREQUENCY_OPTIONS, frequencyLabel } from '@/lib/frequency';
 import { CURRENCY, formatMoney, parseMoney } from '@/lib/money';
 import { completeOnboarding } from '@/lib/onboarding';
 

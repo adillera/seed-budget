@@ -151,6 +151,9 @@ const size = {
   /** Home LCD-style plant: 14 × 10 sprite grid at 7 per pixel. */
   growthAvatarWidth: 98,
   growthAvatarHeight: 70,
+  /** Bottom sheet drag handle (web twin of the system grabber). */
+  grabberWidth: 40,
+  grabberHeight: 4,
 };
 
 /** Milliseconds. */

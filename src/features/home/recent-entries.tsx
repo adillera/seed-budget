@@ -3,9 +3,10 @@ import { View } from 'react-native';
 import { Card, Text } from '@/components/ui';
 import type { RecentEntry } from '@/db/home';
 import { formatShortDate } from '@/lib/dates';
+import { frequencyLabel } from '@/lib/frequency';
 import { formatMoney } from '@/lib/money';
 
-/** The latest entries, newest first, or an empty state. */
+/** The latest entries and bills, newest first, or an empty state. */
 export function RecentEntries({ entries }: { entries: RecentEntry[] }) {
   return (
     <View className="gap-3">
@@ -21,9 +22,15 @@ export function RecentEntries({ entries }: { entries: RecentEntry[] }) {
           <View className="gap-3">
             {entries.map((e) => {
               const sign = e.kind === 'income' ? '+' : '−';
-              const detail = [e.note, formatShortDate(e.date)].filter(Boolean).join(' · ');
+              const detail = (
+                e.type === 'entry'
+                  ? [e.note, formatShortDate(e.date)]
+                  : [e.name, frequencyLabel(e.frequency), `next ${formatShortDate(e.next_due_date)}`]
+              )
+                .filter(Boolean)
+                .join(' · ');
               return (
-                <View key={e.id} className="flex-row items-center gap-3">
+                <View key={e.key} className="flex-row items-center gap-3">
                   <View className="flex-1">
                     <Text variant="bodyStrong" numberOfLines={1}>
                       {e.category_name}

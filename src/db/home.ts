@@ -12,14 +12,18 @@ export type HomeBill = {
   next_due_date: string;
 };
 export type HomeEntrySum = { category_id: number; kind: CategoryKind; cents: number };
-export type RecentEntry = {
-  id: number;
+type RecentBase = {
+  /** Unique across both shapes: `e-<id>` for transactions, `b-<id>` for bills. */
+  key: string;
   amount_cents: number;
-  date: string;
-  note: string | null;
   category_name: string;
   kind: CategoryKind;
+  /** Local YYYY-MM-DD the list sorts by: a transaction's date, a bill's created date. */
+  sort_date: string;
 };
+export type RecentEntry =
+  | (RecentBase & { type: 'entry'; id: number; date: string; note: string | null })
+  | (RecentBase & { type: 'bill'; id: number; name: string | null; frequency: BillFrequency; next_due_date: string });
 
 export type HomeData = {
   categories: HomeCategory[];
@@ -51,13 +55,63 @@ export async function loadHomeData(db: SQLiteDatabase, monthStart: string, month
       monthEnd,
       STARTING_BUDGET_NOTE,
     ),
-    db.getAllAsync<RecentEntry>(
-      `SELECT t.id, t.amount_cents, t.date, t.note, c.name AS category_name, c.kind
+    loadRecent(db),
+  ]);
+  return { categories, bills, entrySums, recent };
+}
+
+type RecentEntryRow = { id: number; amount_cents: number; date: string; note: string | null; category_name: string; kind: CategoryKind };
+type RecentBillRow = {
+  id: number;
+  amount_cents: number;
+  name: string | null;
+  frequency: BillFrequency;
+  next_due_date: string;
+  category_name: string;
+  kind: CategoryKind;
+  /** created_at (UTC) as a local date. */
+  created_on: string;
+  created_at: string;
+};
+
+/**
+ * The latest transactions and bills, merged newest first. Transactions sort by their date, bills
+ * by the local day they were added; ties go to the most recently created row.
+ */
+async function loadRecent(db: SQLiteDatabase): Promise<RecentEntry[]> {
+  const [entries, bills] = await Promise.all([
+    db.getAllAsync<RecentEntryRow & { created_at: string }>(
+      `SELECT t.id, t.amount_cents, t.date, t.note, t.created_at, c.name AS category_name, c.kind
          FROM transactions t JOIN categories c ON c.id = t.category_id
         ORDER BY t.date DESC, t.id DESC
         LIMIT ?`,
       RECENT_LIMIT,
     ),
+    db.getAllAsync<RecentBillRow>(
+      `SELECT b.id, b.amount_cents, b.name, b.frequency, b.next_due_date, b.created_at,
+              date(b.created_at, 'localtime') AS created_on, c.name AS category_name, c.kind
+         FROM bills b JOIN categories c ON c.id = b.category_id
+        ORDER BY b.created_at DESC, b.id DESC
+        LIMIT ?`,
+      RECENT_LIMIT,
+    ),
   ]);
-  return { categories, bills, entrySums, recent };
+
+  const merged = [
+    ...entries.map(({ created_at, ...e }) => ({
+      created_at,
+      row: { ...e, type: 'entry' as const, key: `e-${e.id}`, sort_date: e.date },
+    })),
+    ...bills.map(({ created_at, created_on, ...b }) => ({
+      created_at,
+      row: { ...b, type: 'bill' as const, key: `b-${b.id}`, sort_date: created_on },
+    })),
+  ];
+  merged.sort(
+    (a, b) =>
+      b.row.sort_date.localeCompare(a.row.sort_date) ||
+      b.created_at.localeCompare(a.created_at) ||
+      b.row.id - a.row.id,
+  );
+  return merged.slice(0, RECENT_LIMIT).map((m) => m.row);
 }
