@@ -1,6 +1,7 @@
 export * from './accordion';
 export * from './back-link';
 export * from './badge';
+export * from './brand-lockup';
 export * from './button';
 export * from './card';
 export * from './checkbox';

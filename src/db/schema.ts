@@ -2,7 +2,24 @@
 
 export type CategoryKind = 'income' | 'expense';
 
-export type BillFrequency = 'weekly' | 'biweekly' | 'monthly' | 'yearly';
+/**
+ * Stored values for bills.frequency, in picker order. The CHECK constraint in migrate.ts is built
+ * from this list; adding a value needs a new migration step (SQLite can't alter a CHECK).
+ */
+export const BILL_FREQUENCIES = [
+  'once',
+  'daily',
+  'weekly',
+  'biweekly',
+  'semimonthly',
+  'monthly',
+  'bimonthly',
+  'quarterly',
+  'semiannually',
+  'yearly',
+] as const;
+
+export type BillFrequency = (typeof BILL_FREQUENCIES)[number];
 
 export type CategoryRow = {
   id: number;
@@ -19,8 +36,10 @@ export type BillRow = {
   name: string | null;
   amount_cents: number;
   frequency: BillFrequency;
-  /** Local date, YYYY-MM-DD. */
+  /** Local date, YYYY-MM-DD: the first occurrence not yet posted (src/db/recurring.ts). */
   next_due_date: string;
+  /** Local date, YYYY-MM-DD: the anchor every occurrence is computed from (src/lib/recurrence.ts). */
+  start_date: string;
   created_at: string;
 };
 
@@ -32,5 +51,7 @@ export type TransactionRow = {
   /** Local date, YYYY-MM-DD. */
   date: string;
   note: string | null;
+  /** The bill this occurrence was posted from; null for one-off entries and detached bills. */
+  bill_id: number | null;
   created_at: string;
 };

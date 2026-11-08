@@ -5,6 +5,7 @@ import { Platform, Pressable, View } from 'react-native';
 import { formatShortDate } from '@/lib/dates';
 import { colors } from '@/theme';
 
+import { LockedDate } from './date-field-locked';
 import { Icon, icons } from './icon';
 import { Text } from './text';
 import { FieldLabel } from './text-field';
@@ -16,17 +17,21 @@ export type DateFieldProps = {
   value: Date;
   onChange: (date: Date) => void;
   minimumDate?: Date;
+  maximumDate?: Date;
+  /** Locked: a grey ceramic box showing the date, no picker. */
+  disabled?: boolean;
 };
 
 const box = 'min-h-field rounded-field border border-input-border bg-white flex-row items-center gap-2 px-3';
-
 /**
  * Date picker in the boxed form style (matches TextField `above`).
  * iOS: the system compact picker inside the box. Android: tapping opens the system dialog.
  * Web: date-field.web.tsx (a browser date input).
  */
-export function DateField({ label, value, onChange, minimumDate }: DateFieldProps) {
+export function DateField({ label, value, onChange, minimumDate, maximumDate, disabled }: DateFieldProps) {
   const [open, setOpen] = useState(false);
+
+  if (disabled) return <LockedDate label={label} value={value} />;
 
   if (Platform.OS === 'ios') {
     return (
@@ -39,6 +44,7 @@ export function DateField({ label, value, onChange, minimumDate }: DateFieldProp
             mode="date"
             display="compact"
             minimumDate={minimumDate}
+            maximumDate={maximumDate}
             accentColor={colors.greenAccent}
             themeVariant="light"
             onValueChange={(_, date) => onChange(date)}
@@ -58,7 +64,10 @@ export function DateField({ label, value, onChange, minimumDate }: DateFieldProp
         accessibilityHint="Opens a calendar"
         className={box}>
         <Icon name={icons.calendar} size={18} color="textBlackSoft" />
-        <Text className="flex-1">{formatShortDate(value)}</Text>
+        {/* One line even in a half-width box at large font sizes: shrink rather than wrap. */}
+        <Text className="flex-1" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
+          {formatShortDate(value)}
+        </Text>
       </Pressable>
       {open && (
         // Android dialog presentation: opens on mount, so unmount after set or dismiss.
@@ -67,6 +76,7 @@ export function DateField({ label, value, onChange, minimumDate }: DateFieldProp
           mode="date"
           presentation="dialog"
           minimumDate={minimumDate}
+          maximumDate={maximumDate}
           accentColor={colors.greenAccent}
           onValueChange={(_, date) => {
             setOpen(false);

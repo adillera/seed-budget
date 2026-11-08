@@ -30,16 +30,6 @@ export const NAME_MAX = 30;
 export const DESCRIPTION_MAX = 60;
 export const BILL_NAME_MAX = 40;
 
-export const FREQUENCY_OPTIONS: readonly { label: string; value: BillFrequency }[] = [
-  { label: 'Weekly', value: 'weekly' },
-  { label: 'Every 2 weeks', value: 'biweekly' },
-  { label: 'Monthly', value: 'monthly' },
-  { label: 'Yearly', value: 'yearly' },
-];
-
-export const frequencyLabel = (f: BillFrequency) =>
-  FREQUENCY_OPTIONS.find((o) => o.value === f)?.label ?? f;
-
 /** Kakeibo's four expense categories, plus Income. */
 const DEFAULT_CATEGORIES: readonly Omit<DraftCategory, 'key'>[] = [
   { name: 'Income', description: 'Salary, side work, allowances', kind: 'income' },

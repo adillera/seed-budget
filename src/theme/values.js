@@ -144,8 +144,23 @@ const size = {
   logoMark: 32,
   /** Onboarding field list: max height of its nested scroll area (about 2.5 rows, as in the mockup). */
   fieldList: 176,
+  /** Searchable SelectField: max height of the scrolling option list in its modal. */
+  picker: 360,
   /** ScrollHint chip height. */
   scrollHint: 36,
+  /** Home category breakdown bar height. */
+  progressBar: 6,
+  /** Home LCD-style plant: 14 × 10 sprite grid at 7 per pixel. */
+  growthAvatarWidth: 98,
+  growthAvatarHeight: 70,
+  /** Bottom sheet drag handle (web twin of the system grabber). */
+  grabberWidth: 40,
+  grabberHeight: 4,
+  /** Forecast balance chart: plot height, line stroke, node dot and selected-node dot diameters. */
+  chartHeight: 180,
+  chartLine: 2,
+  chartDot: 8,
+  chartDotSelected: 12,
 };
 
 /** Milliseconds. */
@@ -171,6 +186,9 @@ const easingCurves = {
 
 /** Universal active-state scale on every button. */
 const scalePress = 0.95;
+
+/** Lucide stroke width (24-unit viewBox). `selected` marks the active tab. */
+const iconStroke = { regular: 2, selected: 2.5 };
 
 const opacity = {
   /** Disabled controls. Tailwind: `opacity-disabled`. */
@@ -236,6 +254,7 @@ module.exports = {
   duration,
   easingCurves,
   scalePress,
+  iconStroke,
   opacity,
   fontFamilies,
   typeScale,

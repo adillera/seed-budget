@@ -5,34 +5,35 @@ import { View } from 'react-native';
 import { Badge, Button, Card, DateField, SelectField, Text, TextField } from '@/components/ui';
 import { saveOnboarding } from '@/db/onboarding';
 import type { BillFrequency } from '@/db/schema';
-import {
-  BILL_NAME_MAX,
-  FREQUENCY_OPTIONS,
-  frequencyLabel,
-  startingBudgetCategory,
-  useOnboardingDraft,
-} from '@/features/onboarding/draft';
+import { BILL_NAME_MAX, startingBudgetCategory, useOnboardingDraft } from '@/features/onboarding/draft';
 import { ItemRow } from '@/features/onboarding/item-row';
 import { SetupScreen } from '@/features/onboarding/setup-screen';
 import { formatShortDate, toLocalISODate, today } from '@/lib/dates';
-import { CURRENCY, formatMoney, parseMoney } from '@/lib/money';
+import { FREQUENCY_OPTIONS, frequencyLabel } from '@/lib/frequency';
+import { useMoney } from '@/lib/currency';
 import { completeOnboarding } from '@/lib/onboarding';
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 /** Onboarding step 2: the starting budget and recurring bills. "Plant the seeds" saves everything. */
 export default function Plough() {
+  const { currency, format: formatMoney, parse: parseMoney } = useMoney();
   const db = useSQLiteContext();
   const { draft, dispatch } = useOnboardingDraft();
 
   const income = startingBudgetCategory(draft);
-  const expenseOptions = draft.categories
-    .filter((c) => c.kind === 'expense')
-    .map((c) => ({ label: c.name, value: c.key }));
+  // Every category from the Fields step, with its type, so a recurring entry can go anywhere.
+  const categoryOptions = draft.categories.map((c) => ({
+    label: `${c.name} · ${c.kind === 'income' ? 'Income' : 'Expense'}`,
+    value: c.key,
+  }));
+  // Most bills are expenses: default to the first expense category.
+  const defaultCategory =
+    draft.categories.find((c) => c.kind === 'expense')?.key ?? draft.categories[0]?.key;
   const categoryName = (key: string) => draft.categories.find((c) => c.key === key)?.name ?? '';
 
   // Bill form. Category and frequency stay between bills; the rest resets after each add.
-  const [chosenCategory, setChosenCategory] = useState(expenseOptions[0]?.value);
+  const [chosenCategory, setChosenCategory] = useState(defaultCategory);
   const [billName, setBillName] = useState('');
   const [amountText, setAmountText] = useState('');
   const [frequency, setFrequency] = useState<BillFrequency>('monthly');
@@ -41,10 +42,10 @@ export default function Plough() {
   const [saving, setSaving] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
 
-  // The chosen category may have been removed on the Fields step: fall back to the first one.
-  const categoryKey = expenseOptions.some((o) => o.value === chosenCategory)
+  // The chosen category may have been removed on the Fields step: fall back to the default.
+  const categoryKey = categoryOptions.some((o) => o.value === chosenCategory)
     ? chosenCategory
-    : expenseOptions[0]?.value;
+    : defaultCategory;
 
   const startingInvalid =
     draft.startingAmountText.trim() !== '' && parseMoney(draft.startingAmountText) === null;
@@ -117,16 +118,18 @@ export default function Plough() {
         <TextField
           labelPosition="above"
           label="Amount"
-          prefix={CURRENCY.symbol}
+          prefix={currency.symbol}
           inputSize="lg"
-          placeholder="0.00"
-          keyboardType="decimal-pad"
+          placeholder={currency.digits === 0 ? '0' : '0.00'}
+          keyboardType={currency.digits === 0 ? 'number-pad' : 'decimal-pad'}
           value={draft.startingAmountText}
           onChangeText={(text) => dispatch({ type: 'setStartingAmount', text })}
           state={startingInvalid ? 'invalid' : undefined}
           message={
             startingInvalid
-              ? 'Enter an amount like 1500 or 1500.50.'
+              ? currency.digits === 0
+                ? 'Enter a whole amount like 1500.'
+                : 'Enter an amount like 1500 or 1500.50.'
               : `The money you have to plant right now. We’ll file it under ${income?.name ?? 'Income'}.`
           }
         />
@@ -156,7 +159,7 @@ export default function Plough() {
                 <ItemRow
                   key={b.key}
                   title={title}
-                  detail={`${formatMoney(b.amountCents)} · ${frequencyLabel(b.frequency)} · Next ${formatShortDate(b.nextDueDate)}`}
+                  detail={`${formatMoney(b.amountCents)} · ${frequencyLabel(b.frequency)} · ${b.frequency === 'once' ? 'Due' : 'Next'} ${formatShortDate(b.nextDueDate)}`}
                   onRemove={() => dispatch({ type: 'removeBill', key: b.key })}
                   removeLabel={`Remove ${title}`}
                 />
@@ -169,7 +172,7 @@ export default function Plough() {
           <SelectField
             labelPosition="above"
             label="Category"
-            options={expenseOptions}
+            options={categoryOptions}
             value={categoryKey}
             onChange={setChosenCategory}
           />
@@ -185,13 +188,17 @@ export default function Plough() {
           <TextField
             labelPosition="above"
             label="Amount"
-            prefix={CURRENCY.symbol}
-            placeholder="0.00"
-            keyboardType="decimal-pad"
+            prefix={currency.symbol}
+            placeholder={currency.digits === 0 ? '0' : '0.00'}
+            keyboardType={currency.digits === 0 ? 'number-pad' : 'decimal-pad'}
             value={amountText}
             onChangeText={setAmountText}
             state={billAmountInvalid ? 'invalid' : undefined}
-            message={billAmountInvalid ? 'Enter an amount more than 0, like 1200.' : undefined}
+            message={
+              billAmountInvalid
+                ? `Enter ${currency.digits === 0 ? 'a whole amount' : 'an amount'} more than 0, like 1200.`
+                : undefined
+            }
           />
           <SelectField
             labelPosition="above"

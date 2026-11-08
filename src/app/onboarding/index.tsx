@@ -11,7 +11,7 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 
-import { HoldToUnlock, Screen, Text } from '@/components/ui';
+import { BrandLockup, HoldToUnlock, Screen, Text } from '@/components/ui';
 
 /** Bare soil → leafy sprout. Credits: assets/images/onboarding/CREDITS.md. */
 const PHOTOS = [
@@ -23,7 +23,6 @@ const PHOTOS = [
 const STAGES = PHOTOS.length - 1;
 
 const MARK = require('@/assets/images/logo/seed-mark.svg');
-const MARK_LIGHT = require('@/assets/images/logo/seed-mark-light.svg');
 
 /** Photo `index` (≥ 1) fades in over its slice of the hold, on top of the previous one. */
 function PhotoLayer({ index, progress }: { index: number; progress: SharedValue<number> }) {
@@ -77,12 +76,7 @@ export default function Onboarding() {
       <Screen transparent edges={['top', 'bottom']} contentClassName="pt-5 pb-9">
         <Animated.View style={textStyle}>
           <View className="gap-5">
-            <View className="flex-row items-center gap-2">
-              <Image source={MARK_LIGHT} contentFit="contain" className="size-logo-mark" />
-              <Text variant="bodyStrong" color="textWhite">
-                Seed: <Text color="textWhite">Budget</Text>
-              </Text>
-            </View>
+            <BrandLockup />
             <View className="gap-3">
               <Text variant="heroLarge" color="textWhite" accessibilityRole="header">
                 Small amounts, planted well, grow.

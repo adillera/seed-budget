@@ -14,6 +14,11 @@ export type ScreenProps = {
   transparent?: boolean;
   /** Style for the centered content column. */
   contentStyle?: StyleProp<ViewStyle>;
+  /**
+   * Full-bleed block above the column, inside the scroll view (e.g. a photo hero). It handles its
+   * own gutter and safe area; pair with `edges={[]}` to run it under the status bar. Needs `scroll`.
+   */
+  header?: ReactNode;
 };
 
 /** Screen shell: neutralWarm canvas, safe area, responsive gutter (16/24/40), max reading width. */
@@ -24,14 +29,16 @@ export function Screen({
   contentClassName,
   transparent,
   contentStyle,
+  header,
 }: ScreenProps) {
   const column = `w-full max-w-content self-center gap-3 px-3 md:px-4 lg:px-6 ${contentClassName ?? ''}`;
 
   return (
     <SafeAreaView edges={edges} className={transparent ? 'flex-1 bg-transparent' : 'flex-1 bg-neutral-warm'}>
       {scroll ? (
-        <ScrollView contentContainerClassName="py-4" keyboardShouldPersistTaps="handled">
-          <View className={column} style={contentStyle}>
+        <ScrollView contentContainerClassName={header ? 'pb-4' : 'py-4'} keyboardShouldPersistTaps="handled">
+          {header}
+          <View className={header ? `pt-4 ${column}` : column} style={contentStyle}>
             {children}
           </View>
         </ScrollView>

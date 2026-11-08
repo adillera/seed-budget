@@ -47,3 +47,14 @@ export function completeOnboarding() {
   onboarded = true;
   listeners.forEach((listener) => listener());
 }
+
+/** Clears completion (Settings → Start over); the tabs layout then redirects to onboarding. */
+export function resetOnboarding() {
+  try {
+    window.localStorage.removeItem(KEY);
+  } catch {
+    // Storage blocked: onboarding still restarts for this session.
+  }
+  onboarded = false;
+  listeners.forEach((listener) => listener());
+}
