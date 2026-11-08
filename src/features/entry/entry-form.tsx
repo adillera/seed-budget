@@ -201,7 +201,7 @@ export function EntryForm({ initial }: EntryFormProps) {
 
       {initial && (
         <>
-          <Button variant="destructive" fullWidth disabled={saving} onPress={() => setConfirmingDelete(true)}>
+          <Button variant="destructiveSubtle" fullWidth disabled={saving} onPress={() => setConfirmingDelete(true)}>
             Delete entry
           </Button>
           <Modal open={confirmingDelete} onClose={() => setConfirmingDelete(false)} title="Delete this entry?">
