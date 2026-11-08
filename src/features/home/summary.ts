@@ -1,32 +1,18 @@
 import type { HomeBill, HomeData } from '@/db/home';
-import type { BillFrequency } from '@/db/schema';
-
-/** How many times a bill repeats per month. `once` is handled by its due date instead. */
-const PER_MONTH: Record<Exclude<BillFrequency, 'once'>, number> = {
-  daily: 365 / 12,
-  weekly: 52 / 12,
-  biweekly: 26 / 12,
-  semimonthly: 2,
-  monthly: 1,
-  bimonthly: 1 / 2,
-  quarterly: 1 / 3,
-  semiannually: 1 / 6,
-  yearly: 1 / 12,
-};
+import { occurrencesBetween } from '@/lib/recurrence';
 
 /**
- * A bill's monthly equivalent in whole cents. A one-time bill counts in full only in the month
- * it's due (YYYY-MM-DD strings compare correctly as text).
+ * A bill's occurrences still to come this month, in cents: its due dates from `next_due_date`
+ * (or the month start, if later) to the month end. Posted occurrences are transactions already,
+ * and next_due_date is past them, so nothing counts twice.
  */
-export function monthlyCents(
-  bill: Pick<HomeBill, 'amount_cents' | 'frequency' | 'next_due_date'>,
+export function upcomingCents(
+  bill: Pick<HomeBill, 'amount_cents' | 'frequency' | 'start_date' | 'next_due_date'>,
   monthStart: string,
   monthEnd: string,
 ) {
-  if (bill.frequency === 'once') {
-    return bill.next_due_date >= monthStart && bill.next_due_date <= monthEnd ? bill.amount_cents : 0;
-  }
-  return Math.round(bill.amount_cents * PER_MONTH[bill.frequency]);
+  const from = bill.next_due_date > monthStart ? bill.next_due_date : monthStart;
+  return occurrencesBetween(bill.start_date, bill.frequency, from, monthEnd).length * bill.amount_cents;
 }
 
 /** 0 mound · 1 sprout · 2 seedling · 3 sapling · 4 tree. */
@@ -52,12 +38,12 @@ export type CategorySpend = {
 };
 
 export type HomeSummary = {
-  /** Income − expenses this month (entries + bills per month). Can be negative. */
+  /** Income − expenses this month (transactions + bill occurrences still to come). Can be negative. */
   netCents: number;
   grossIncomeCents: number;
-  /** Expense entries this month. */
+  /** Expense transactions this month so far (posted bills included). */
   spentCents: number;
-  /** Expense bills per month. */
+  /** Expense bill occurrences this month: posted + still to come. */
   billsMonthlyCents: number;
   /** Expense categories in list order. */
   categories: CategorySpend[];
@@ -72,23 +58,28 @@ export function summarize(data: Omit<HomeData, 'recent'>, monthStart: string, mo
 
   let incomeEntries = 0;
   let spentCents = 0;
+  let postedBillsCents = 0;
   for (const e of data.entrySums) {
     add(e.category_id, e.cents);
     if (e.kind === 'income') incomeEntries += e.cents;
-    else spentCents += e.cents;
+    else {
+      spentCents += e.cents;
+      postedBillsCents += e.billCents;
+    }
   }
 
-  let incomeBills = 0;
-  let billsMonthlyCents = 0;
+  let incomeUpcoming = 0;
+  let expenseUpcoming = 0;
   for (const b of data.bills) {
-    const cents = monthlyCents(b, monthStart, monthEnd);
+    const cents = upcomingCents(b, monthStart, monthEnd);
     add(b.category_id, cents);
-    if (b.kind === 'income') incomeBills += cents;
-    else billsMonthlyCents += cents;
+    if (b.kind === 'income') incomeUpcoming += cents;
+    else expenseUpcoming += cents;
   }
 
-  const grossIncomeCents = incomeEntries + incomeBills;
-  const expenseCents = spentCents + billsMonthlyCents;
+  const grossIncomeCents = incomeEntries + incomeUpcoming;
+  const expenseCents = spentCents + expenseUpcoming;
+  const billsMonthlyCents = postedBillsCents + expenseUpcoming;
   const netCents = grossIncomeCents - expenseCents;
 
   const categories = data.categories

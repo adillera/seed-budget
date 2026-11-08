@@ -55,7 +55,7 @@ export function CategoryBreakdown({ categories }: { categories: CategorySpend[] 
             );
           })}
           <Text variant="small" color="textBlackSoft">
-            Recurring bills and entries are counted per month.
+            Recurring bills count on their due dates.
           </Text>
         </View>
       </Card>

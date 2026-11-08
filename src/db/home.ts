@@ -9,9 +9,12 @@ export type HomeBill = {
   kind: CategoryKind;
   amount_cents: number;
   frequency: BillFrequency;
+  start_date: string;
+  /** First occurrence not yet posted (after postDueBills, always after today). */
   next_due_date: string;
 };
-export type HomeEntrySum = { category_id: number; kind: CategoryKind; cents: number };
+/** Transaction totals for one category this month; `billCents` is the posted-bill part. */
+export type HomeEntrySum = { category_id: number; kind: CategoryKind; cents: number; billCents: number };
 type RecentBase = {
   /** Unique across both shapes: `e-<id>` for transactions, `b-<id>` for bills. */
   key: string;
@@ -22,32 +25,36 @@ type RecentBase = {
   sort_date: string;
 };
 export type RecentEntry =
-  | (RecentBase & { type: 'entry'; id: number; date: string; note: string | null })
+  | (RecentBase & { type: 'entry'; id: number; date: string; note: string | null; recurring: number })
   | (RecentBase & { type: 'bill'; id: number; name: string | null; frequency: BillFrequency; next_due_date: string });
 
 export type HomeData = {
   categories: HomeCategory[];
   bills: HomeBill[];
-  /** Entry totals per category for the month, without the starting budget row. */
+  /** Transaction totals per category for the month (posted bills included), without the starting budget row. */
   entrySums: HomeEntrySum[];
   recent: RecentEntry[];
 };
 
 export const RECENT_LIMIT = 5;
 
-/** Raw rows for Home for one month (YYYY-MM-DD bounds, inclusive). Totals: features/home/summary.ts. */
+/**
+ * Raw rows for Home for one month (YYYY-MM-DD bounds, inclusive). Totals: features/home/summary.ts.
+ * Call postDueBills first, so bills only hold occurrences that haven't happened yet.
+ */
 export async function loadHomeData(db: SQLiteDatabase, monthStart: string, monthEnd: string): Promise<HomeData> {
   const [categories, bills, entrySums, recent] = await Promise.all([
     db.getAllAsync<HomeCategory>(
       'SELECT id, name, description, kind FROM categories ORDER BY sort_order, id',
     ),
     db.getAllAsync<HomeBill>(
-      `SELECT b.category_id, c.kind, b.amount_cents, b.frequency, b.next_due_date
+      `SELECT b.category_id, c.kind, b.amount_cents, b.frequency, b.start_date, b.next_due_date
          FROM bills b JOIN categories c ON c.id = b.category_id`,
     ),
     // The starting budget is capital, not income: leave it out of monthly totals.
     db.getAllAsync<HomeEntrySum>(
-      `SELECT t.category_id, c.kind, SUM(t.amount_cents) AS cents
+      `SELECT t.category_id, c.kind, SUM(t.amount_cents) AS cents,
+              SUM(CASE WHEN t.bill_id IS NULL THEN 0 ELSE t.amount_cents END) AS billCents
          FROM transactions t JOIN categories c ON c.id = t.category_id
         WHERE t.date BETWEEN ? AND ? AND t.note IS NOT ?
         GROUP BY t.category_id`,
@@ -60,7 +67,16 @@ export async function loadHomeData(db: SQLiteDatabase, monthStart: string, month
   return { categories, bills, entrySums, recent };
 }
 
-type RecentEntryRow = { id: number; amount_cents: number; date: string; note: string | null; category_name: string; kind: CategoryKind };
+type RecentEntryRow = {
+  id: number;
+  amount_cents: number;
+  date: string;
+  note: string | null;
+  /** Posted from a bill (SQLite returns 0/1). */
+  recurring: number;
+  category_name: string;
+  kind: CategoryKind;
+};
 type RecentBillRow = {
   id: number;
   amount_cents: number;
@@ -81,7 +97,8 @@ type RecentBillRow = {
 async function loadRecent(db: SQLiteDatabase): Promise<RecentEntry[]> {
   const [entries, bills] = await Promise.all([
     db.getAllAsync<RecentEntryRow & { created_at: string }>(
-      `SELECT t.id, t.amount_cents, t.date, t.note, t.created_at, c.name AS category_name, c.kind
+      `SELECT t.id, t.amount_cents, t.date, t.note, t.bill_id IS NOT NULL AS recurring, t.created_at,
+              c.name AS category_name, c.kind
          FROM transactions t JOIN categories c ON c.id = t.category_id
         ORDER BY t.date DESC, t.id DESC
         LIMIT ?`,

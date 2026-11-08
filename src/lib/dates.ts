@@ -44,3 +44,16 @@ const monthYear = new Intl.DateTimeFormat(CURRENCY.locale, { month: 'long', year
 export function formatMonthYear(date: Date) {
   return monthYear.format(date);
 }
+
+/** `iso` + n days (n may be negative), as YYYY-MM-DD. Local dates, so DST never shifts the day. */
+export function addDays(iso: string, n: number) {
+  const d = fromLocalISODate(iso);
+  return toLocalISODate(new Date(d.getFullYear(), d.getMonth(), d.getDate() + n));
+}
+
+/** `iso` + n months, keeping its day but clamped to the target month's last day (Jan 31 + 1 → Feb 28). */
+export function addMonthsClamped(iso: string, n: number) {
+  const d = fromLocalISODate(iso);
+  const lastDay = new Date(d.getFullYear(), d.getMonth() + n + 1, 0).getDate();
+  return toLocalISODate(new Date(d.getFullYear(), d.getMonth() + n, Math.min(d.getDate(), lastDay)));
+}

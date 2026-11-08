@@ -19,9 +19,9 @@ export async function saveOnboarding(db: SQLiteDatabase, draft: OnboardingDraft)
   const incomeCategory = startingBudgetCategory(draft);
 
   await db.withTransactionAsync(async () => {
-    // Children first: bills and transactions reference categories.
-    await db.runAsync('DELETE FROM bills');
+    // Children first: transactions reference bills, and both reference categories.
     await db.runAsync('DELETE FROM transactions');
+    await db.runAsync('DELETE FROM bills');
     await db.runAsync('DELETE FROM categories');
 
     const ids = new Map<string, number>();
@@ -50,11 +50,12 @@ export async function saveOnboarding(db: SQLiteDatabase, draft: OnboardingDraft)
       const categoryId = ids.get(b.categoryKey);
       if (categoryId === undefined) throw new Error(`Bill ${b.key} has no saved category`);
       await db.runAsync(
-        'INSERT INTO bills (category_id, name, amount_cents, frequency, next_due_date) VALUES (?, ?, ?, ?, ?)',
+        'INSERT INTO bills (category_id, name, amount_cents, frequency, start_date, next_due_date) VALUES (?, ?, ?, ?, ?, ?)',
         categoryId,
         b.name ?? null,
         b.amountCents,
         b.frequency,
+        b.nextDueDate,
         b.nextDueDate,
       );
     }

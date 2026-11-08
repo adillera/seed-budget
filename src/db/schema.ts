@@ -36,8 +36,10 @@ export type BillRow = {
   name: string | null;
   amount_cents: number;
   frequency: BillFrequency;
-  /** Local date, YYYY-MM-DD. */
+  /** Local date, YYYY-MM-DD: the first occurrence not yet posted (src/db/recurring.ts). */
   next_due_date: string;
+  /** Local date, YYYY-MM-DD: the anchor every occurrence is computed from (src/lib/recurrence.ts). */
+  start_date: string;
   created_at: string;
 };
 
@@ -49,5 +51,7 @@ export type TransactionRow = {
   /** Local date, YYYY-MM-DD. */
   date: string;
   note: string | null;
+  /** The bill this occurrence was posted from; null for one-off entries and detached bills. */
+  bill_id: number | null;
   created_at: string;
 };

@@ -1,10 +1,11 @@
+import { router } from 'expo-router';
 import { View } from 'react-native';
 
 import { Card, Text } from '@/components/ui';
 import type { RecentEntry } from '@/db/home';
+import { EntryRow, joinDetail } from '@/features/entries/entry-row';
 import { formatShortDate } from '@/lib/dates';
 import { frequencyLabel } from '@/lib/frequency';
-import { formatMoney } from '@/lib/money';
 
 /** The latest entries and bills, newest first, or an empty state. */
 export function RecentEntries({ entries }: { entries: RecentEntry[] }) {
@@ -20,32 +21,20 @@ export function RecentEntries({ entries }: { entries: RecentEntry[] }) {
           </Text>
         ) : (
           <View className="gap-3">
-            {entries.map((e) => {
-              const sign = e.kind === 'income' ? '+' : '−';
-              const detail = (
-                e.type === 'entry'
-                  ? [e.note, formatShortDate(e.date)]
-                  : [e.name, frequencyLabel(e.frequency), `next ${formatShortDate(e.next_due_date)}`]
-              )
-                .filter(Boolean)
-                .join(' · ');
-              return (
-                <View key={e.key} className="flex-row items-center gap-3">
-                  <View className="flex-1">
-                    <Text variant="bodyStrong" numberOfLines={1}>
-                      {e.category_name}
-                    </Text>
-                    <Text variant="small" color="textBlackSoft" numberOfLines={1}>
-                      {detail}
-                    </Text>
-                  </View>
-                  <Text variant="bodyStrong">
-                    {sign}
-                    {formatMoney(e.amount_cents)}
-                  </Text>
-                </View>
-              );
-            })}
+            {entries.map((e) => (
+              <EntryRow
+                key={e.key}
+                title={e.category_name}
+                detail={
+                  e.type === 'entry'
+                    ? joinDetail([e.note, formatShortDate(e.date), e.recurring ? 'Recurring' : null])
+                    : joinDetail([e.name, frequencyLabel(e.frequency), `next ${formatShortDate(e.next_due_date)}`])
+                }
+                amountCents={e.amount_cents}
+                kind={e.kind}
+                onPress={() => router.push(`/entry/${e.key}`)}
+              />
+            ))}
           </View>
         )}
       </Card>

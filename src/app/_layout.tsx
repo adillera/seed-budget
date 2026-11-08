@@ -1,7 +1,7 @@
 import '@/global.css';
 import '@/theme/interop';
 
-import { DefaultTheme, Stack, ThemeProvider, type Theme } from 'expo-router';
+import { DefaultTheme, Stack, ThemeProvider, type NativeStackNavigationOptions, type Theme } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { SQLiteProvider } from 'expo-sqlite';
 import { useEffect } from 'react';
@@ -36,6 +36,27 @@ const navigationTheme: Theme = {
   },
 };
 
+/**
+ * Entry sheets (add-entry, entry/[key]). Native: a system form sheet sized to its content.
+ * Web: Expo Router renders form sheets as plain routes, so it's a transparent modal and
+ * SheetFrame's web twin draws the scrim and panel over the tabs.
+ */
+const SHEET_OPTIONS = Platform.select<NativeStackNavigationOptions>({
+  web: {
+    presentation: 'transparentModal',
+    animation: 'none',
+    headerShown: false,
+    contentStyle: { backgroundColor: 'transparent' },
+  },
+  default: {
+    presentation: 'formSheet',
+    sheetGrabberVisible: true,
+    sheetAllowedDetents: 'fitToContents',
+    headerShown: false,
+    contentStyle: { backgroundColor: colors.white },
+  },
+});
+
 export default function RootLayout() {
   const [loaded, error] = useAppFonts();
   // On web, `onboarded` is null until the client has read storage (see src/lib/onboarding.web.ts).
@@ -64,27 +85,8 @@ export default function RootLayout() {
               redirects to /onboarding until onboarded; onboarding/_layout redirects to / once it is. */}
           <Stack.Screen name="onboarding" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: 'fade' }} />
-          {/* Native: a system form sheet sized to its content. Web: Expo Router renders form
-              sheets as plain routes, so it's a transparent modal and SheetFrame's web twin
-              draws the scrim and panel over the tabs. */}
-          <Stack.Screen
-            name="add-entry"
-            options={Platform.select({
-              web: {
-                presentation: 'transparentModal',
-                animation: 'none',
-                headerShown: false,
-                contentStyle: { backgroundColor: 'transparent' },
-              },
-              default: {
-                presentation: 'formSheet',
-                sheetGrabberVisible: true,
-                sheetAllowedDetents: 'fitToContents',
-                headerShown: false,
-                contentStyle: { backgroundColor: colors.white },
-              },
-            })}
-          />
+          <Stack.Screen name="add-entry" options={SHEET_OPTIONS} />
+          <Stack.Screen name="entry/[key]" options={SHEET_OPTIONS} />
         </Stack>
       </SQLiteProvider>
     </ThemeProvider>

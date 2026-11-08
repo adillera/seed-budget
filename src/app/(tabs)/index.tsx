@@ -5,11 +5,12 @@ import { useCallback, useState } from 'react';
 
 import { Card, Screen, Text } from '@/components/ui';
 import { loadHomeData, type RecentEntry } from '@/db/home';
+import { postDueBills } from '@/db/recurring';
 import { CategoryBreakdown } from '@/features/home/category-breakdown';
 import { Hero } from '@/features/home/hero';
 import { RecentEntries } from '@/features/home/recent-entries';
 import { summarize, type HomeSummary } from '@/features/home/summary';
-import { monthBounds, today } from '@/lib/dates';
+import { monthBounds, toLocalISODate, today } from '@/lib/dates';
 
 type HomeState =
   | { status: 'loading' }
@@ -27,7 +28,9 @@ export default function Home() {
       let active = true;
       const month = today();
       const { start, end } = monthBounds(month);
-      loadHomeData(db, start, end)
+      // Post due bill occurrences first, so the month counts them as transactions.
+      postDueBills(db, toLocalISODate(month))
+        .then(() => loadHomeData(db, start, end))
         .then((data) => {
           if (active) setState({ status: 'ready', month, summary: summarize(data, start, end), recent: data.recent });
         })

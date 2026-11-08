@@ -2,10 +2,18 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 
-import { Button, ChoiceChips, DateField, SelectField, Text, TextField } from '@/components/ui';
-import { addEntry, loadEntryCategories, type EntryCategory, type EntryRepeat } from '@/db/entries';
+import { Button, ChoiceChips, DateField, Modal, SelectField, Text, TextField } from '@/components/ui';
+import {
+  addEntry,
+  deleteEntry,
+  loadEntryCategories,
+  updateEntry,
+  type EditableEntry,
+  type EntryCategory,
+  type EntryRepeat,
+} from '@/db/entries';
 import type { CategoryKind } from '@/db/schema';
-import { toLocalISODate, today } from '@/lib/dates';
+import { fromLocalISODate, toLocalISODate, today } from '@/lib/dates';
 import { FREQUENCY_OPTIONS } from '@/lib/frequency';
 import { CURRENCY, formatMoney, parseMoney } from '@/lib/money';
 
@@ -18,22 +26,35 @@ const KIND_OPTIONS = [
   { label: 'Income', value: 'income' },
 ] as const;
 
+/** Amount as the person would type it: "1500" or "1500.50". */
+const amountText = (cents: number) => (cents % 100 === 0 ? String(cents / 100) : (cents / 100).toFixed(2));
+
+export type EntryFormProps = {
+  /** Edit mode: the saved row. Without it the form adds a new entry. */
+  initial?: EditableEntry;
+};
+
 /**
- * Add an entry: kind, amount, category, note, repeats and date. One-time saves a transaction;
- * any other repeat saves a bill (src/db/entries.ts). Closes the sheet once saved.
+ * Add or edit an entry: kind, amount, category, note, repeats and date. One-time saves a
+ * transaction; any other repeat saves a bill (src/db/entries.ts). Edit mode adds Delete.
+ * The starting budget hides kind, note and repeats: Home finds it by its note.
+ * Closes the sheet once saved or deleted.
  */
-export function EntryForm() {
+export function EntryForm({ initial }: EntryFormProps) {
   const db = useSQLiteContext();
   const [categories, setCategories] = useState<EntryCategory[] | null>(null);
-  const [kind, setKind] = useState<CategoryKind>('expense');
-  const [amountText, setAmountText] = useState('');
+  const [kind, setKind] = useState<CategoryKind>(initial?.kind ?? 'expense');
+  const [amountInput, setAmountInput] = useState(initial ? amountText(initial.amountCents) : '');
   const [amountInvalid, setAmountInvalid] = useState(false);
-  const [chosenCategoryId, setChosenCategoryId] = useState<number | null>(null);
-  const [note, setNote] = useState('');
-  const [repeat, setRepeat] = useState<EntryRepeat>('once');
-  const [date, setDate] = useState(today);
+  const [chosenCategoryId, setChosenCategoryId] = useState<number | null>(initial?.categoryId ?? null);
+  const [note, setNote] = useState(initial?.note ?? '');
+  const [repeat, setRepeat] = useState<EntryRepeat>(initial?.repeat ?? 'once');
+  const [date, setDate] = useState(() => (initial ? fromLocalISODate(initial.date) : today()));
   const [saving, setSaving] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleteFailed, setDeleteFailed] = useState(false);
+  const startingBudget = initial?.isStartingBudget ?? false;
 
   useEffect(() => {
     let active = true;
@@ -62,7 +83,7 @@ export function EntryForm() {
 
   const save = async () => {
     if (saving || !category) return;
-    const amountCents = parseMoney(amountText);
+    const amountCents = parseMoney(amountInput);
     if (amountCents === null || amountCents <= 0) {
       setAmountInvalid(true);
       return;
@@ -70,13 +91,16 @@ export function EntryForm() {
     setSaving(true);
     setSaveFailed(false);
     try {
-      await addEntry(db, {
+      const entry = {
         categoryId: category.id,
         amountCents,
-        note: note.trim() || null,
-        repeat,
+        // The starting budget keeps its note and stays a one-time entry.
+        note: startingBudget ? (initial?.note ?? null) : note.trim() || null,
+        repeat: startingBudget ? ('once' as const) : repeat,
         date: toLocalISODate(date),
-      });
+      };
+      if (initial) await updateEntry(db, initial.key, entry);
+      else await addEntry(db, entry);
       closeSheet();
     } catch (error) {
       console.error('Add entry: saving failed', error);
@@ -85,9 +109,30 @@ export function EntryForm() {
     }
   };
 
+  const remove = async () => {
+    if (!initial || saving) return;
+    setSaving(true);
+    setDeleteFailed(false);
+    try {
+      await deleteEntry(db, initial.key);
+      setConfirmingDelete(false);
+      closeSheet();
+    } catch (error) {
+      console.error('Edit entry: deleting failed', error);
+      setDeleteFailed(true);
+      setSaving(false);
+    }
+  };
+
   return (
     <View className="gap-3">
-      <ChoiceChips layout="stretch" label="Entry type" options={KIND_OPTIONS} value={kind} onChange={changeKind} />
+      {startingBudget ? (
+        <Text variant="small" color="textBlackSoft">
+          Your starting budget. It’s capital, so Home leaves it out of monthly income.
+        </Text>
+      ) : (
+        <ChoiceChips layout="stretch" label="Entry type" options={KIND_OPTIONS} value={kind} onChange={changeKind} />
+      )}
 
       <TextField
         labelPosition="above"
@@ -96,10 +141,10 @@ export function EntryForm() {
         inputSize="lg"
         placeholder="0.00"
         keyboardType="decimal-pad"
-        autoFocus
-        value={amountText}
+        autoFocus={!initial}
+        value={amountInput}
         onChangeText={(text) => {
-          setAmountText(text);
+          setAmountInput(text);
           setAmountInvalid(false);
         }}
         state={amountInvalid ? 'invalid' : undefined}
@@ -117,25 +162,29 @@ export function EntryForm() {
             onChange={(v) => setChosenCategoryId(Number(v))}
           />
         </View>
-        <View className="flex-1">
-          <TextField
-            labelPosition="above"
-            label="Note"
-            placeholder="e.g. Groceries"
-            value={note}
-            onChangeText={setNote}
-            maxLength={ENTRY_NOTE_MAX}
-          />
-        </View>
+        {!startingBudget && (
+          <View className="flex-1">
+            <TextField
+              labelPosition="above"
+              label="Note"
+              placeholder="e.g. Groceries"
+              value={note}
+              onChangeText={setNote}
+              maxLength={ENTRY_NOTE_MAX}
+            />
+          </View>
+        )}
       </View>
 
-      <SelectField
-        labelPosition="above"
-        label="Repeats"
-        options={FREQUENCY_OPTIONS}
-        value={repeat}
-        onChange={(v) => setRepeat(v as EntryRepeat)}
-      />
+      {!startingBudget && (
+        <SelectField
+          labelPosition="above"
+          label="Repeats"
+          options={FREQUENCY_OPTIONS}
+          value={repeat}
+          onChange={(v) => setRepeat(v as EntryRepeat)}
+        />
+      )}
 
       <DateField label="Date" value={date} onChange={setDate} />
 
@@ -147,8 +196,29 @@ export function EntryForm() {
       {saveFailed && <Text color="red">Couldn’t save. Try again.</Text>}
 
       <Button fullWidth loading={saving} disabled={!category} onPress={save}>
-        {kind === 'income' ? 'Save income' : 'Save expense'}
+        {initial ? 'Save changes' : kind === 'income' ? 'Save income' : 'Save expense'}
       </Button>
+
+      {initial && (
+        <>
+          <Button variant="destructive" fullWidth disabled={saving} onPress={() => setConfirmingDelete(true)}>
+            Delete entry
+          </Button>
+          <Modal open={confirmingDelete} onClose={() => setConfirmingDelete(false)} title="Delete this entry?">
+            <Text color="textBlackSoft">
+              {[category?.name, formatMoney(initial.amountCents), initial.note].filter(Boolean).join(' · ')}. This
+              can’t be undone.
+            </Text>
+            {deleteFailed && <Text color="red">Couldn’t delete. Try again.</Text>}
+            <Button variant="destructive" fullWidth loading={saving} onPress={remove}>
+              Delete
+            </Button>
+            <Button variant="outline" fullWidth onPress={() => setConfirmingDelete(false)}>
+              Cancel
+            </Button>
+          </Modal>
+        </>
+      )}
     </View>
   );
 }

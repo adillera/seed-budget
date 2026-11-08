@@ -1,5 +1,6 @@
 /** Money is always integer cents. One currency for now; a setting can replace this constant later. */
-export const CURRENCY = { code: 'PHP', symbol: '₱', locale: 'en-PH' } as const;
+/** `name` is the singular word for copy ("Every peso in and out"). */
+export const CURRENCY = { code: 'PHP', symbol: '₱', locale: 'en-PH', name: 'peso' } as const;
 
 /** Largest amount accepted (₱999,999,999.99), well inside safe-integer range. */
 const MAX_CENTS = 99_999_999_999;

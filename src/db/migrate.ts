@@ -5,7 +5,7 @@ import { BILL_FREQUENCIES } from './schema';
 /** Name of the app database, opened once by SQLiteProvider in the root layout. */
 export const DATABASE_NAME = 'seed.db';
 
-const DATABASE_VERSION = 2;
+const DATABASE_VERSION = 3;
 
 /**
  * Migrates seed.db with `PRAGMA user_version`. Never edit a released step: add a new
@@ -71,6 +71,21 @@ export async function migrate(db: SQLiteDatabase) {
       `);
     });
     version = 2;
+  }
+
+  if (version === 2) {
+    // v3: recurring bills post real entries (plan 08). transactions.bill_id links a posted
+    // occurrence to its bill (NULL for one-off entries; detached by code, foreign keys aren't
+    // enforced). bills.start_date is the anchor every occurrence is computed from;
+    // next_due_date becomes the first occurrence not yet posted.
+    await db.withTransactionAsync(async () => {
+      await db.execAsync(`
+        ALTER TABLE transactions ADD COLUMN bill_id INTEGER REFERENCES bills(id);
+        ALTER TABLE bills ADD COLUMN start_date TEXT NOT NULL DEFAULT '';
+        UPDATE bills SET start_date = next_due_date;
+      `);
+    });
+    version = 3;
   }
 
   await db.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);

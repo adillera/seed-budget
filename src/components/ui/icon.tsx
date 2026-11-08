@@ -27,6 +27,7 @@ export const icons = {
   chevronLeft: { ios: 'chevron.left', android: 'chevron_left', web: 'chevron_left' },
   calendar: { ios: 'calendar', android: 'calendar_today', web: 'calendar_today' },
   home: { ios: 'house', android: 'home', web: 'home' },
+  entries: { ios: 'list.bullet', android: 'format_list_bulleted', web: 'format_list_bulleted' },
   categories: { ios: 'square.grid.2x2', android: 'grid_view', web: 'grid_view' },
   forecast: { ios: 'chart.line.uptrend.xyaxis', android: 'show_chart', web: 'show_chart' },
 } as const satisfies Record<string, IconName>;
