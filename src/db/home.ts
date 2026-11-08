@@ -1,6 +1,5 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-import { STARTING_BUDGET_NOTE } from './onboarding';
 import type { BillFrequency, CategoryKind } from './schema';
 
 export type HomeCategory = { id: number; name: string; description: string | null; kind: CategoryKind };
@@ -31,7 +30,7 @@ export type RecentEntry =
 export type HomeData = {
   categories: HomeCategory[];
   bills: HomeBill[];
-  /** Transaction totals per category for the month (posted bills included), without the starting budget row. */
+  /** Transaction totals per category for the month (posted bills and the starting budget included). */
   entrySums: HomeEntrySum[];
   recent: RecentEntry[];
 };
@@ -51,16 +50,14 @@ export async function loadHomeData(db: SQLiteDatabase, monthStart: string, month
       `SELECT b.category_id, c.kind, b.amount_cents, b.frequency, b.start_date, b.next_due_date
          FROM bills b JOIN categories c ON c.id = b.category_id`,
     ),
-    // The starting budget is capital, not income: leave it out of monthly totals.
     db.getAllAsync<HomeEntrySum>(
       `SELECT t.category_id, c.kind, SUM(t.amount_cents) AS cents,
               SUM(CASE WHEN t.bill_id IS NULL THEN 0 ELSE t.amount_cents END) AS billCents
          FROM transactions t JOIN categories c ON c.id = t.category_id
-        WHERE t.date BETWEEN ? AND ? AND t.note IS NOT ?
+        WHERE t.date BETWEEN ? AND ?
         GROUP BY t.category_id`,
       monthStart,
       monthEnd,
-      STARTING_BUDGET_NOTE,
     ),
     loadRecent(db),
   ]);
