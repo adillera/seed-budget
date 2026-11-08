@@ -144,6 +144,8 @@ const size = {
   logoMark: 32,
   /** Onboarding field list: max height of its nested scroll area (about 2.5 rows, as in the mockup). */
   fieldList: 176,
+  /** Searchable SelectField: max height of the scrolling option list in its modal. */
+  picker: 360,
   /** ScrollHint chip height. */
   scrollHint: 36,
   /** Home category breakdown bar height. */

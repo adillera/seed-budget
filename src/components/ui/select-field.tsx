@@ -2,7 +2,8 @@ import { useState, type ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { DropdownMenu } from './dropdown-menu';
-import { FieldLabel } from './text-field';
+import { HintScrollView } from './scroll-hint';
+import { FieldLabel, TextField } from './text-field';
 import { Icon, icons } from './icon';
 import { Modal } from './modal';
 import { Stepper, type StepperProps } from './stepper';
@@ -27,6 +28,13 @@ type OptionsProps = BaseProps & {
    * - above: uppercase label above a boxed row, value left-aligned (matches TextField `above`).
    */
   labelPosition?: 'notch' | 'above';
+  /**
+   * Long lists (currencies): the modal gets a search box (matches label or value, any case) and a
+   * scrolling list capped at `max-h-picker`, with a check on the selected option.
+   */
+  searchable?: boolean;
+  /** Searchable only: placeholder of the search box. */
+  searchPlaceholder?: string;
   stepper?: never;
   rowLabel?: never;
 };
@@ -64,11 +72,19 @@ function OptionsSelect({
   onChange,
   placeholder,
   labelPosition = 'notch',
+  searchable,
+  searchPlaceholder,
 }: OptionsProps) {
   const [open, setOpen] = useState(false);
   const [internal, setInternal] = useState(defaultValue);
   const current = value ?? internal;
   const selected = options.find((o) => o.value === current);
+
+  const choose = (option: SelectOption) => {
+    setInternal(option.value);
+    onChange?.(option.value);
+    setOpen(false);
+  };
 
   return (
     <>
@@ -110,16 +126,89 @@ function OptionsSelect({
         )}
       </Pressable>
       <Modal open={open} onClose={() => setOpen(false)} title={label}>
-        <DropdownMenu
-          items={options}
-          onSelect={(option) => {
-            setInternal(option.value);
-            onChange?.(option.value);
-            setOpen(false);
-          }}
-        />
+        {searchable ? (
+          // Mounted only while open, so the search starts empty every time.
+          open && (
+            <SearchableOptions
+              label={label}
+              options={options}
+              selected={current}
+              placeholder={searchPlaceholder}
+              onSelect={choose}
+            />
+          )
+        ) : (
+          <DropdownMenu items={options} onSelect={choose} />
+        )}
       </Modal>
     </>
+  );
+}
+
+function SearchableOptions({
+  label,
+  options,
+  selected,
+  placeholder,
+  onSelect,
+}: {
+  label: string;
+  options: readonly SelectOption[];
+  selected?: string;
+  placeholder?: string;
+  onSelect: (option: SelectOption) => void;
+}) {
+  const [query, setQuery] = useState('');
+  const q = query.trim().toLowerCase();
+  const matches = q
+    ? options.filter((o) => o.label.toLowerCase().includes(q) || o.value.toLowerCase().includes(q))
+    : options;
+
+  return (
+    <View className="gap-3">
+      <TextField
+        label={`Search ${label.toLowerCase()}`}
+        labelPosition="above"
+        hideLabel
+        placeholder={placeholder ?? 'Search'}
+        value={query}
+        onChangeText={setQuery}
+        autoCorrect={false}
+        autoCapitalize="none"
+        returnKeyType="search"
+        onSubmitEditing={() => {
+          if (matches.length === 1) onSelect(matches[0]);
+        }}
+      />
+      {matches.length === 0 ? (
+        <Text color="textBlackSoft" className="px-1 py-2">
+          Nothing matches “{query.trim()}”
+        </Text>
+      ) : (
+        <HintScrollView
+          className="max-h-picker bg-neutral-cool rounded-card overflow-hidden"
+          contentContainerClassName="py-2"
+          keyboardShouldPersistTaps="handled"
+          accessibilityRole="list">
+          {matches.map((option) => {
+            const isSelected = option.value === selected;
+            return (
+              <Pressable
+                key={option.value}
+                onPress={() => onSelect(option)}
+                accessibilityRole="button"
+                aria-selected={isSelected}
+                className="min-h-tap-target flex-row items-center gap-2 px-4 py-2 active:bg-black-alpha-6">
+                <Text className="flex-1" variant={isSelected ? 'bodyStrong' : 'body'}>
+                  {option.label}
+                </Text>
+                {isSelected && <Icon name={icons.check} size={18} color="greenAccent" />}
+              </Pressable>
+            );
+          })}
+        </HintScrollView>
+      )}
+    </View>
   );
 }
 

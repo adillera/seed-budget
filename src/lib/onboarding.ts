@@ -30,3 +30,10 @@ export function completeOnboarding() {
   onboarded = true;
   listeners.forEach((listener) => listener());
 }
+
+/** Clears completion (Settings → Start over); the tabs layout then redirects to onboarding. */
+export function resetOnboarding() {
+  Storage.removeItemSync(KEY);
+  onboarded = false;
+  listeners.forEach((listener) => listener());
+}

@@ -2,7 +2,7 @@ import { View } from 'react-native';
 
 import { Card, Text } from '@/components/ui';
 import { formatShortDate } from '@/lib/dates';
-import { formatMoney } from '@/lib/money';
+import { useMoney } from '@/lib/currency';
 
 import type { Forecast } from './forecast';
 
@@ -10,6 +10,7 @@ export type SummaryCardProps = { forecast: Forecast; to: string };
 
 /** Coming in, going out and the balance on the To date, green or red. */
 export function SummaryCard({ forecast, to }: SummaryCardProps) {
+  const { format: formatMoney } = useMoney();
   const negative = forecast.endBalanceCents < 0;
   return (
     <Card>

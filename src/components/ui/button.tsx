@@ -14,7 +14,8 @@ export type ButtonVariant =
   | 'inverse'
   | 'outlineInverse'
   | 'destructive'
-  | 'destructiveSubtle';
+  | 'destructiveSubtle'
+  | 'destructiveOutline';
 
 export type ButtonProps = Omit<PressableProps, 'children' | 'style'> & {
   children: string;
@@ -23,6 +24,7 @@ export type ButtonProps = Omit<PressableProps, 'children' | 'style'> & {
    * - inverse / outlineInverse: only on greenHouse bands.
    * - destructive: delete and other irreversible actions (and their confirm step).
    * - destructiveSubtle: a secondary delete under a form's main action; red label on light gray.
+   * - destructiveOutline: opens a destructive flow that confirms next (Reset); red outline.
    */
   variant?: ButtonVariant;
   size?: 'md' | 'sm';
@@ -40,6 +42,7 @@ const variants: Record<ButtonVariant, { container: string; label: ColorToken }> 
   outlineInverse: { container: 'bg-transparent border-white', label: 'textWhite' },
   destructive: { container: 'bg-red border-red', label: 'textWhite' },
   destructiveSubtle: { container: 'bg-ceramic border-ceramic', label: 'red' },
+  destructiveOutline: { container: 'bg-transparent border-red', label: 'red' },
 };
 
 const sizeClass = { md: 'min-h-button px-4', sm: 'min-h-button-sm px-3' } as const;

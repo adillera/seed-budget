@@ -4,7 +4,7 @@ import Svg, { Circle, ClipPath, Defs, Line, Path, Rect } from 'react-native-svg'
 
 import { Card, Text } from '@/components/ui';
 import { formatShortDate } from '@/lib/dates';
-import { formatMoney, formatMoneyCompact } from '@/lib/money';
+import { useMoney } from '@/lib/currency';
 import { colors, size } from '@/theme';
 
 import type { ForecastPoint } from './forecast';
@@ -45,6 +45,7 @@ const toneOf = (cents: number) => (cents < 0 ? colors.red : colors.greenAccent);
  * Remount (key) when the points change, so the selection resets to the last node.
  */
 export function BalanceChart({ points, days }: BalanceChartProps) {
+  const { format: formatMoney, formatCompact: formatMoneyCompact } = useMoney();
   const [width, setWidth] = useState(0);
   const [selected, setSelected] = useState(points.length - 1);
   const point = points[selected] ?? points[points.length - 1];

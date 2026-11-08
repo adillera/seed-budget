@@ -3,7 +3,7 @@ import { View } from 'react-native';
 
 import { BrandLockup, Button, icons, Text } from '@/components/ui';
 import { formatMonthYear } from '@/lib/dates';
-import { formatMoney } from '@/lib/money';
+import { useMoney } from '@/lib/currency';
 
 import { GrowthAvatar } from './growth-avatar';
 import { PhotoHero } from './photo-hero';
@@ -18,6 +18,7 @@ export type HeroProps = { month: Date; summary: HomeSummary };
  * the growth avatar and "Add an entry".
  */
 export function Hero({ month, summary }: HeroProps) {
+  const { format: formatMoney } = useMoney();
   return (
     <PhotoHero photo={PHOTO}>
       <View className="flex-row items-center justify-between gap-3">
@@ -50,6 +51,7 @@ export function Hero({ month, summary }: HeroProps) {
 }
 
 function StatTile({ label, cents }: { label: string; cents: number }) {
+  const { format: formatMoney } = useMoney();
   return (
     <View className="bg-white-alpha-10 border border-white-alpha-20 rounded-card px-3 py-2">
       <Text variant="small" color="textWhiteSoft">

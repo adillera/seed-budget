@@ -45,4 +45,14 @@ export const TABS = [
       selected: require('@/assets/images/tabs/forecast-selected.png'),
     },
   },
+  {
+    name: 'settings',
+    href: '/settings',
+    label: 'Settings',
+    icon: icons.settings,
+    image: {
+      default: require('@/assets/images/tabs/settings.png'),
+      selected: require('@/assets/images/tabs/settings-selected.png'),
+    },
+  },
 ] as const satisfies readonly { name: string; href: string; label: string; icon: IconName; image: TabImage }[];

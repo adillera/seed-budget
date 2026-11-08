@@ -2,6 +2,7 @@ import type { SQLiteDatabase } from 'expo-sqlite';
 
 import { startingBudgetCategory, type OnboardingDraft } from '@/features/onboarding/draft';
 import { toLocalISODate, today } from '@/lib/dates';
+import { getCurrency } from '@/lib/currency';
 import { parseMoney } from '@/lib/money';
 
 export const STARTING_BUDGET_NOTE = 'Starting budget';
@@ -15,7 +16,7 @@ export const STARTING_BUDGET_NOTE = 'Starting budget';
  * their UNIQUE constraint and the save fails.
  */
 export async function saveOnboarding(db: SQLiteDatabase, draft: OnboardingDraft) {
-  const startingCents = parseMoney(draft.startingAmountText) ?? 0;
+  const startingCents = parseMoney(draft.startingAmountText, getCurrency()) ?? 0;
   const incomeCategory = startingBudgetCategory(draft);
 
   await db.withTransactionAsync(async () => {

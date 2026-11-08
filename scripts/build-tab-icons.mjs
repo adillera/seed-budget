@@ -23,6 +23,7 @@ const TABS = [
   { file: 'entries', lucide: 'list' },
   { file: 'categories', lucide: 'layout-grid' },
   { file: 'forecast', lucide: 'chart-line' },
+  { file: 'settings', lucide: 'settings' },
 ];
 /** iOS tab bar glyph size in points; Android uses the same files. */
 const SIZE = 25;

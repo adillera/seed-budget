@@ -10,13 +10,14 @@ import { ItemRow } from '@/features/onboarding/item-row';
 import { SetupScreen } from '@/features/onboarding/setup-screen';
 import { formatShortDate, toLocalISODate, today } from '@/lib/dates';
 import { FREQUENCY_OPTIONS, frequencyLabel } from '@/lib/frequency';
-import { CURRENCY, formatMoney, parseMoney } from '@/lib/money';
+import { useMoney } from '@/lib/currency';
 import { completeOnboarding } from '@/lib/onboarding';
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 /** Onboarding step 2: the starting budget and recurring bills. "Plant the seeds" saves everything. */
 export default function Plough() {
+  const { currency, format: formatMoney, parse: parseMoney } = useMoney();
   const db = useSQLiteContext();
   const { draft, dispatch } = useOnboardingDraft();
 
@@ -117,16 +118,18 @@ export default function Plough() {
         <TextField
           labelPosition="above"
           label="Amount"
-          prefix={CURRENCY.symbol}
+          prefix={currency.symbol}
           inputSize="lg"
-          placeholder="0.00"
-          keyboardType="decimal-pad"
+          placeholder={currency.digits === 0 ? '0' : '0.00'}
+          keyboardType={currency.digits === 0 ? 'number-pad' : 'decimal-pad'}
           value={draft.startingAmountText}
           onChangeText={(text) => dispatch({ type: 'setStartingAmount', text })}
           state={startingInvalid ? 'invalid' : undefined}
           message={
             startingInvalid
-              ? 'Enter an amount like 1500 or 1500.50.'
+              ? currency.digits === 0
+                ? 'Enter a whole amount like 1500.'
+                : 'Enter an amount like 1500 or 1500.50.'
               : `The money you have to plant right now. We’ll file it under ${income?.name ?? 'Income'}.`
           }
         />
@@ -185,13 +188,17 @@ export default function Plough() {
           <TextField
             labelPosition="above"
             label="Amount"
-            prefix={CURRENCY.symbol}
-            placeholder="0.00"
-            keyboardType="decimal-pad"
+            prefix={currency.symbol}
+            placeholder={currency.digits === 0 ? '0' : '0.00'}
+            keyboardType={currency.digits === 0 ? 'number-pad' : 'decimal-pad'}
             value={amountText}
             onChangeText={setAmountText}
             state={billAmountInvalid ? 'invalid' : undefined}
-            message={billAmountInvalid ? 'Enter an amount more than 0, like 1200.' : undefined}
+            message={
+              billAmountInvalid
+                ? `Enter ${currency.digits === 0 ? 'a whole amount' : 'an amount'} more than 0, like 1200.`
+                : undefined
+            }
           />
           <SelectField
             labelPosition="above"

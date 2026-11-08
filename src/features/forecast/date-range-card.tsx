@@ -2,7 +2,7 @@ import { View } from 'react-native';
 
 import { Card, DateField, Text } from '@/components/ui';
 import { addDays, formatShortDate, fromLocalISODate, toLocalISODate } from '@/lib/dates';
-import { formatMoney } from '@/lib/money';
+import { useMoney } from '@/lib/currency';
 
 export type DateRangeCardProps = {
   /** Day one (locked From), YYYY-MM-DD. */
@@ -19,6 +19,7 @@ const AHEAD = 'Pick how far ahead to look with the To date.';
 
 /** From (locked to day one) and To, with a note on where the forecast starts. */
 export function DateRangeCard({ from, to, today, maxTo, starting, onChangeTo }: DateRangeCardProps) {
+  const { format: formatMoney } = useMoney();
   const when = from === today ? 'today' : formatShortDate(from);
   return (
     <Card>

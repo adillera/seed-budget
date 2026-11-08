@@ -1,4 +1,5 @@
-import { CURRENCY } from './money';
+/** Locale for date labels ("Dec 5, 2026"); independent of the chosen currency. */
+const DATE_LOCALE = 'en-PH';
 
 /** Local calendar date as YYYY-MM-DD (not UTC: toISOString would shift it across midnight). */
 export function toLocalISODate(date: Date) {
@@ -20,7 +21,7 @@ export function today() {
   return new Date(now.getFullYear(), now.getMonth(), now.getDate());
 }
 
-const shortDate = new Intl.DateTimeFormat(CURRENCY.locale, {
+const shortDate = new Intl.DateTimeFormat(DATE_LOCALE, {
   month: 'short',
   day: 'numeric',
   year: 'numeric',
@@ -38,7 +39,7 @@ export function monthBounds(date: Date) {
   return { start: toLocalISODate(start), end: toLocalISODate(end) };
 }
 
-const monthYear = new Intl.DateTimeFormat(CURRENCY.locale, { month: 'long', year: 'numeric' });
+const monthYear = new Intl.DateTimeFormat(DATE_LOCALE, { month: 'long', year: 'numeric' });
 
 /** "November 2026" */
 export function formatMonthYear(date: Date) {

@@ -15,7 +15,7 @@ import {
 import type { CategoryKind } from '@/db/schema';
 import { fromLocalISODate, toLocalISODate, today } from '@/lib/dates';
 import { FREQUENCY_OPTIONS } from '@/lib/frequency';
-import { CURRENCY, formatMoney, parseMoney } from '@/lib/money';
+import { useMoney } from '@/lib/currency';
 
 import { closeSheet } from './sheet-header';
 
@@ -41,6 +41,7 @@ export type EntryFormProps = {
  * Closes the sheet once saved or deleted.
  */
 export function EntryForm({ initial }: EntryFormProps) {
+  const { currency, format: formatMoney, parse: parseMoney } = useMoney();
   const db = useSQLiteContext();
   const [categories, setCategories] = useState<EntryCategory[] | null>(null);
   const [kind, setKind] = useState<CategoryKind>(initial?.kind ?? 'expense');
@@ -137,10 +138,10 @@ export function EntryForm({ initial }: EntryFormProps) {
       <TextField
         labelPosition="above"
         label="Amount"
-        prefix={CURRENCY.symbol}
+        prefix={currency.symbol}
         inputSize="lg"
-        placeholder="0.00"
-        keyboardType="decimal-pad"
+        placeholder={currency.digits === 0 ? '0' : '0.00'}
+        keyboardType={currency.digits === 0 ? 'number-pad' : 'decimal-pad'}
         autoFocus={!initial}
         value={amountInput}
         onChangeText={(text) => {
@@ -148,7 +149,13 @@ export function EntryForm({ initial }: EntryFormProps) {
           setAmountInvalid(false);
         }}
         state={amountInvalid ? 'invalid' : undefined}
-        message={amountInvalid ? `Enter an amount above ${formatMoney(0)}` : undefined}
+        message={
+          amountInvalid
+            ? currency.digits === 0
+              ? `Enter a whole amount above ${formatMoney(0)}: the ${currency.name} has no decimals`
+              : `Enter an amount above ${formatMoney(0)}`
+            : undefined
+        }
       />
 
       <View className="flex-row gap-3">

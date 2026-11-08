@@ -1,7 +1,7 @@
 import { Pressable, View } from 'react-native';
 
 import { Card, Text } from '@/components/ui';
-import { formatMoney } from '@/lib/money';
+import { useMoney } from '@/lib/currency';
 import { size } from '@/theme';
 
 import type { CategorySpend } from './summary';
@@ -10,6 +10,7 @@ const LINK_SLOP = (size.tapTarget - 24) / 2;
 
 /** "Where it's going": this month's spending per expense category, with share bars. */
 export function CategoryBreakdown({ categories }: { categories: CategorySpend[] }) {
+  const { format: formatMoney } = useMoney();
   return (
     <View className="gap-3">
       <View className="flex-row items-center justify-between gap-3">

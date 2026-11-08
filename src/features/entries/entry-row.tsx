@@ -2,7 +2,7 @@ import { Pressable, View } from 'react-native';
 
 import { Text } from '@/components/ui';
 import type { CategoryKind } from '@/db/schema';
-import { formatMoney } from '@/lib/money';
+import { useMoney } from '@/lib/currency';
 
 export type EntryRowProps = {
   /** The category name. */
@@ -16,6 +16,7 @@ export type EntryRowProps = {
 
 /** One entry or bill: category, detail line and the signed amount. Pressing it opens the edit sheet. */
 export function EntryRow({ title, detail, amountCents, kind, onPress }: EntryRowProps) {
+  const { format: formatMoney } = useMoney();
   const sign = kind === 'income' ? '+' : '−';
   const amount = formatMoney(amountCents);
   return (

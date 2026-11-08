@@ -12,7 +12,7 @@ import { groupByMonth } from '@/features/entries/group';
 import { PhotoHero } from '@/features/home/photo-hero';
 import { formatMonthYear, formatShortDate, fromLocalISODate, toLocalISODate, today } from '@/lib/dates';
 import { frequencyLabel } from '@/lib/frequency';
-import { CURRENCY } from '@/lib/money';
+import { useMoney } from '@/lib/currency';
 
 const PHOTO = require('@/assets/images/onboarding/04-sprout.jpg');
 
@@ -91,13 +91,14 @@ function Gap() {
 }
 
 function EntriesHero() {
+  const { currency } = useMoney();
   return (
     <PhotoHero photo={PHOTO}>
       <View className="gap-1">
         <Text variant="heroLarge" color="textWhite" accessibilityRole="header">
           Entries
         </Text>
-        <Text color="textWhiteSoft">Every {CURRENCY.name} in and out, all in one place.</Text>
+        <Text color="textWhiteSoft">Every {currency.unit} in and out, all in one place.</Text>
       </View>
       <Button variant="inverse" fullWidth icon={icons.plus} onPress={() => router.push('/add-entry')}>
         Add an entry
