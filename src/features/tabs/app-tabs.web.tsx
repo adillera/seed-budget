@@ -4,6 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon, Text, type IconName } from '@/components/ui';
 
+import { iconStroke } from '@/theme';
+
 import { TABS } from './tabs';
 
 /**
@@ -45,7 +47,12 @@ function TabButton({ icon, label, isFocused, ...props }: TabButtonProps) {
       className="flex-1 min-h-tap-target active:opacity-pressed">
       {/* Layout on an inner View: TabTrigger's own style on the Pressable lays children in a row. */}
       <View className="flex-1 flex-col items-center justify-center gap-1">
-        <Icon name={icon} size={24} color={color} />
+        <Icon
+          name={icon}
+          size={24}
+          color={color}
+          strokeWidth={isFocused ? iconStroke.selected : iconStroke.regular}
+        />
         <Text variant="smallStrong" color={color}>
           {label}
         </Text>

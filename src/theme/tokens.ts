@@ -20,6 +20,8 @@ export const duration = values.duration;
 /** Universal active-state scale on every button. */
 export const scalePress = values.scalePress;
 export const opacity = values.opacity;
+/** Lucide stroke width; `selected` marks the active tab. */
+export const iconStroke = values.iconStroke;
 
 const bezier = ([x1, y1, x2, y2]: number[]) => Easing.bezier(x1, y1, x2, y2);
 

@@ -36,7 +36,7 @@ Run lint and typecheck before declaring any task done.
 
 - Use **Expo Router** for all navigation. Routes live in `src/app/` — every file there is a screen, `_layout.tsx` files define navigators. Keep non-route code (components, hooks, utils) outside `src/app/`.
 - Import `Link`, `router`, and `useLocalSearchParams` from `expo-router`.
-- Main screens are tabs in `src/app/(tabs)/` (Home, Entries, Categories, Forecast). The list lives in `src/features/tabs/tabs.ts`, rendered by `app-tabs.tsx` (`NativeTabs` from `expo-router/native-tabs`) and its `.web.tsx` twin (headless `expo-router/ui` tabs styled like the mockup; `TabSlot` needs `flex-1` or tall screens push the bar off-page). A new tab = a route + an entry in `tabs.ts`.
+- Main screens are tabs in `src/app/(tabs)/` (Home, Entries, Categories, Forecast). The list lives in `src/features/tabs/tabs.ts`, rendered by `app-tabs.tsx` (`NativeTabs` from `expo-router/native-tabs`) and its `.web.tsx` twin (headless `expo-router/ui` tabs styled like the mockup; `TabSlot` needs `flex-1` or tall screens push the bar off-page). A new tab = a route + an entry in `tabs.ts` + its icon in `scripts/build-tab-icons.mjs`.
 - Sheets are root-Stack routes sharing `SHEET_OPTIONS` in the root layout (`add-entry`; `entry/[key]` edits `e-<id>` transactions and `b-<id>` bills, keys from `entryKey`/`parseEntryKey` in `src/db/entries.ts`), and the root Stack anchors on `(tabs)` so they open over Home even after a deep link. Native: `presentation: 'formSheet'`, `sheetAllowedDetents: 'fitToContents'`, no ScrollView inside. Web renders form sheets as plain routes, so web uses `transparentModal` + `animation: 'none'` + transparent `contentStyle`, and `SheetFrame`'s `.web.tsx` twin (`src/features/entry/`) draws the scrim, grabber, bottom panel and Escape (capture phase; a focused input keeps the key). Move it to `components/ui` when a second sheet needs it.
 - Docs: https://docs.expo.dev/router/introduction.md
 
@@ -58,7 +58,7 @@ Build all UI from the design system: tokens in `src/theme/` and components in `s
 - Text color is `textBlack`/`textBlackSoft`, never pure black. `greenAccent` is for actions and links and never goes on `greenHouse`. `red` is for errors and destructive actions, always with a message.
 - Every button is a pill that scales to 0.95 on press (`PressScale`), with no shadows. Use at most one `FloatButton` per screen.
 - `p-3`/`gap-3` (16) is the default padding, phone gutter and gap. Make tap targets at least 44 (`min-h-tap-target` or `hitSlop`).
-- Icons go through `Icon` (expo-symbols) with `{ ios, android, web }` names; shared ones are in `icons`.
+- Icons go through `Icon` (Lucide via `lucide-react-native`; `IconName` is a Lucide component); shared ones are in `icons`, stroke from `iconStroke`. The native tab bar can't draw SVG, so tab icons are Lucide template PNGs in `assets/images/tabs/` made by `npm run icons:tabs` (`scripts/build-tab-icons.mjs`) and passed with `renderingMode="template"`.
 - Responsive layout uses breakpoint classes (`md:` 768, `lg:` 1024; gutter `px-3 md:px-4 lg:px-6`). Use `useWindowWidth()` only when JS needs the width; never `useWindowDimensions` (web is server-rendered, so a width read during render causes hydration mismatches).
 - For accessibility state use `aria-checked`/`aria-expanded`/`aria-selected`/`aria-disabled`, not `accessibilityState`, which react-native-web ignores.
 - Animate with Reanimated and write shared values with `.set()` (the React Compiler lint rule rejects `.value =`).

@@ -180,6 +180,9 @@ const easingCurves = {
 /** Universal active-state scale on every button. */
 const scalePress = 0.95;
 
+/** Lucide stroke width (24-unit viewBox). `selected` marks the active tab. */
+const iconStroke = { regular: 2, selected: 2.5 };
+
 const opacity = {
   /** Disabled controls. Tailwind: `opacity-disabled`. */
   disabled: 0.4,
@@ -244,6 +247,7 @@ module.exports = {
   duration,
   easingCurves,
   scalePress,
+  iconStroke,
   opacity,
   fontFamilies,
   typeScale,
