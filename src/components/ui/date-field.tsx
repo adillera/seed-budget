@@ -64,7 +64,10 @@ export function DateField({ label, value, onChange, minimumDate, maximumDate, di
         accessibilityHint="Opens a calendar"
         className={box}>
         <Icon name={icons.calendar} size={18} color="textBlackSoft" />
-        <Text className="flex-1">{formatShortDate(value)}</Text>
+        {/* One line even in a half-width box at large font sizes: shrink rather than wrap. */}
+        <Text className="flex-1" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
+          {formatShortDate(value)}
+        </Text>
       </Pressable>
       {open && (
         // Android dialog presentation: opens on mount, so unmount after set or dismiss.

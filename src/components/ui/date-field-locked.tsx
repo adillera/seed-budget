@@ -19,7 +19,7 @@ export function LockedDate({ label, value }: { label: string; value: Date }) {
         accessibilityLabel={`${label}: ${formatShortDate(value)}`}
         aria-disabled>
         <Icon name={icons.calendar} size={18} color="textBlackSoft" />
-        <Text color="textBlackSoft" className="flex-1">
+        <Text color="textBlackSoft" className="flex-1" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
           {formatShortDate(value)}
         </Text>
       </View>
