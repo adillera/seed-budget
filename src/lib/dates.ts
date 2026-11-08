@@ -57,3 +57,8 @@ export function addMonthsClamped(iso: string, n: number) {
   const lastDay = new Date(d.getFullYear(), d.getMonth() + n + 1, 0).getDate();
   return toLocalISODate(new Date(d.getFullYear(), d.getMonth() + n, Math.min(d.getDate(), lastDay)));
 }
+
+/** Whole days from `from` to `to` (YYYY-MM-DD), negative when `to` is earlier. Counted in UTC, so DST can't skew it. */
+export function daysBetween(from: string, to: string) {
+  return Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
+}

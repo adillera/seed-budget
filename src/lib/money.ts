@@ -31,3 +31,15 @@ export function parseMoney(text: string): number | null {
   const cents = Number(whole || '0') * 100 + Number(fraction.padEnd(2, '0'));
   return cents <= MAX_CENTS ? cents : null;
 }
+
+const compactFormatter = new Intl.NumberFormat(CURRENCY.locale, {
+  style: 'currency',
+  currency: CURRENCY.code,
+  notation: 'compact',
+  maximumFractionDigits: 1,
+});
+
+/** "₱10K", "-₱2.5M": for tight spots like chart axes, never for the exact amount. */
+export function formatMoneyCompact(cents: number) {
+  return compactFormatter.format(cents / 100);
+}

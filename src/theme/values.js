@@ -154,6 +154,11 @@ const size = {
   /** Bottom sheet drag handle (web twin of the system grabber). */
   grabberWidth: 40,
   grabberHeight: 4,
+  /** Forecast balance chart: plot height, line stroke, node dot and selected-node dot diameters. */
+  chartHeight: 180,
+  chartLine: 2,
+  chartDot: 8,
+  chartDotSelected: 12,
 };
 
 /** Milliseconds. */
