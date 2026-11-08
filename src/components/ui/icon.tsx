@@ -8,7 +8,9 @@ import {
   LayoutGrid,
   List,
   Minus,
+  Pencil,
   Plus,
+  Trash2,
   X,
   type LucideIcon,
 } from 'lucide-react-native';
@@ -45,4 +47,6 @@ export const icons = {
   entries: List,
   categories: LayoutGrid,
   forecast: ChartLine,
+  pencil: Pencil,
+  trash: Trash2,
 } as const satisfies Record<string, IconName>;
