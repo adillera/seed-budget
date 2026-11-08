@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "seed-budget",
-    "slug": "seed-budget",
-    "version": "1.0.0",
+    "name": "budget",
+    "slug": "budget",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "budget",
