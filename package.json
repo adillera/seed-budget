@@ -52,6 +52,7 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "icons:tabs": "node scripts/build-tab-icons.mjs",
+    "icons:app": "node scripts/build-app-icons.mjs",
     "currencies": "node scripts/build-currencies.mjs"
   },
   "private": true
